@@ -22,7 +22,7 @@ And na linha da aluna "Marina" vejo as notas "7.0","7.0","-" nas metas "Requisit
 And o campo "média" da aluna "Marina" não está colorida
 When registro a nota "9.0" na meta "Saas"
 Then eu continuo na página "Evaluations" na turma "ESS - (2026/1)"
-And na linha da aluna "Marina" vejo as notas "7.0", "7.0", "9.0" nas metas "Requisitos", "Testes" e "Saas", respectivamente e média "8.0"
+And na linha da aluna "Marina" vejo as notas "7.0", "7.0", "9.0" nas metas "Requisitos", "Testes" e "Saas", respectivamente e média "7.7"
 And o campo "média" da aluna "Marina" está colorido de verde
 
 Scenario: coloração dos alunos quando a média é arredondada e muda de faixa

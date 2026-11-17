@@ -28,7 +28,8 @@
     "test": "react-scripts test",
     "test:cucumber": "npx cucumber-js --config cucumber.js",
     "test:cucumber:watch": "npx cucumber-js --config cucumber.js --watch",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:bdd:fernando": "cucumber-js --config cucumber.js --profile fernando"
   },
   "eslintConfig": {
     "extends": [

@@ -14,6 +14,7 @@
     "jsx": "react-jsx"
   },
   "include": [
+    "acceptance/**/*",
     "src/features/**/*",
     "src/step-definitions/**/*"
   ],

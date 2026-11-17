@@ -228,3 +228,39 @@ changed.
 ## License
 
 ISC
+
+## Fernando: acceptance and persistence tests
+
+```bash
+npm ci
+npm run build --prefix client
+npm run test:bdd:fernando --prefix client
+```
+
+The Fernando Cucumber profile runs the two `fernando-*.feature` files through
+Puppeteer against the production React build and a real Express server. It
+starts its own servers on ports 3004 and 3005; stop development servers on these
+ports first. Each scenario has fresh collections, a temporary JSON file and a
+new browser page. Assertions check the actual DOM. Reports and screenshots are
+written to `client/reports/fernando.html` and `fernando.json`. Results, including
+failed assertions, must be interpreted from that report independently of Jest.
+The full run commands and results are in `evidence/COMMANDS.md`.
+
+The independent persistence integration test uses real HTTP handlers, domain
+models and JsonFileRepository, then constructs a new application from the file:
+
+```bash
+npm test --prefix server -- --runInBand --runTestsByPath src/__tests__/evaluation.persistence.integration.test.ts
+```
+
+It checks recording a grade, rejecting an invalid update without changing the
+stored grade, restoring it in fresh instances and removing it across reloads.
+No mocks replace the modules under test. Files are isolated in temporary
+directories and synchronization follows the persistence task queue.
+
+`PUPPETEER_CACHE_DIR` selects a custom browser cache. `PUPPETEER_NO_SANDBOX=1`
+is an explicit option for containers that cannot enable Chrome sandboxing.
+
+The complete acceptance flows for numeric averages and status colors are pending
+the corresponding application controls. Treat their final acceptance report as
+pending; component and persistence test results are separate evidence.

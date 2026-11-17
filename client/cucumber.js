@@ -5,6 +5,12 @@
 process.env.TS_NODE_PROJECT = process.env.TS_NODE_PROJECT || 'tsconfig.test.json';
 
 module.exports = {
+  fernando: {
+    require: ['acceptance/fernando.steps.ts'],
+    requireModule: ['ts-node/register'],
+    paths: ['src/features/fernando-calculo-media.feature', 'src/features/fernando-color-coding.feature'],
+    format: ['progress', 'json:reports/fernando.json', 'html:reports/fernando.html']
+  },
   default: {
     require: [
       'ts-node/register',
