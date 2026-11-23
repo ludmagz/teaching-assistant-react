@@ -45,6 +45,42 @@ describe('Evaluations', () => {
     expect(await screen.findByText('No Students Enrolled')).toBeInTheDocument();
   });
 
+  test.each([
+    [7, 'approved'],
+    [3, 'final'],
+    [0, 'failed'],
+    [null, null]
+  ] as const)('shows average %s with status %s', async (average, status) => {
+    const user = userEvent.setup();
+    (classService.getAllClasses as jest.Mock).mockResolvedValue([{
+      ...softwareEngineering,
+      gradingThresholds: { minimumAverageToPass: 7, minimumAverageForFinalExam: 3 },
+      enrollments: [{ ...softwareEngineering.enrollments[0], averageBeforeFinalExam: average }]
+    }]);
+    render(<Evaluations onError={jest.fn()} />);
+    await user.selectOptions(await screen.findByLabelText('Select Class:'), softwareEngineering.id);
+    const cell = within(screen.getByRole('row', { name: /Ana Lima/ })).getByTestId('numeric-average');
+    expect(cell.textContent).toBe(average == null ? '-' : String(average));
+    if (status) {
+      expect(cell).toHaveClass(`average-${status}`);
+    } else {
+      expect(cell.className).toBe('evaluation-cell average-cell');
+    }
+  });
+
+  test('shows a numeric average without a status color when thresholds are missing', async () => {
+    const user = userEvent.setup();
+    (classService.getAllClasses as jest.Mock).mockResolvedValue([{
+      ...softwareEngineering,
+      enrollments: [{ ...softwareEngineering.enrollments[0], averageBeforeFinalExam: 7 }]
+    }]);
+    render(<Evaluations onError={jest.fn()} />);
+    await user.selectOptions(await screen.findByLabelText('Select Class:'), softwareEngineering.id);
+    const cell = within(screen.getByRole('row', { name: /Ana Lima/ })).getByTestId('numeric-average');
+    expect(cell.textContent).toBe('7');
+    expect(cell.className).toBe('evaluation-cell average-cell');
+  });
+
   test('changing a grade updates the evaluation and reloads the classes', async () => {
     const user = userEvent.setup();
     (enrollmentService.updateEvaluation as jest.Mock).mockResolvedValue({});

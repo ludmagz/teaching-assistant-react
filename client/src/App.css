@@ -1102,6 +1102,18 @@ tbody tr:last-child td {
   background: #ffffff;
 }
 
+.evaluation-table .average-cell.average-approved {
+  background: #4ade80;
+}
+
+.evaluation-table .average-cell.average-final {
+  background: #facc15;
+}
+
+.evaluation-table .average-cell.average-failed {
+  background: #f87171;
+}
+
 .evaluation-select {
   width: 90%;
   max-width: 90px;

@@ -3,6 +3,7 @@ import { Class } from '../types/Class';
 import { EVALUATION_GOALS, GRADES } from '../types/Evaluation';
 import { classService } from '../services/ClassService';
 import { enrollmentService } from '../services/EnrollmentService';
+import { getAverageStatus } from '../utils/getAverageStatus';
 
 import { ImportGradeComponent } from './ImportGrade';
 
@@ -141,6 +142,10 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
               <tbody>
                 {selectedClass.enrollments.map(enrollment => {
                   const student = enrollment.student;
+                  const averageStatus = getAverageStatus(
+                    enrollment.averageBeforeFinalExam,
+                    selectedClass.gradingThresholds
+                  );
                   
                   // Create a map of evaluations for quick lookup
                   const studentEvaluations = enrollment.evaluations.reduce((acc, evaluation) => {
@@ -169,7 +174,12 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                           </td>
                         );
                       })}
-                      <td className="evaluation-cell">{enrollment.averageBeforeFinalExam ?? '-'}</td>
+                      <td
+                        className={`evaluation-cell average-cell${averageStatus ? ` average-${averageStatus}` : ''}`}
+                        data-testid="numeric-average"
+                      >
+                        {enrollment.averageBeforeFinalExam ?? '-'}
+                      </td>
                     </tr>
                   );
                 })}
