@@ -1,12 +1,18 @@
 import { AverageCalculationSpecification } from './AverageCalculationSpecification';
 import { Enrollment } from './Enrollment';
 
+export interface GradingThresholds {
+  minimumAverageToPass: number;
+  minimumAverageForFinalExam: number;
+}
+
 export interface Class {
   id: string;
   topic: string;
   semester: number;
   year: number;
   averageCalculationSpecification: AverageCalculationSpecification;
+  gradingThresholds?: GradingThresholds | null;
   enrollments: Enrollment[];
 }
 
