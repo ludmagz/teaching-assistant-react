@@ -1012,21 +1012,21 @@ tbody tr:last-child td {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  min-width: 800px;
+  min-width: 760px;
   table-layout: fixed; /* Fixed layout for uniform column widths */
 }
 
 .student-name-header {
   background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: white;
-  padding: 16px;
+  padding: 12px 8px;
   text-align: center;
   font-weight: 700;
   border: 1px solid #4338ca;
   position: sticky;
   left: 0;
   z-index: 10;
-  width: 200px; /* Fixed width for student column */
+  width: 160px;
   font-size: 1rem;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
@@ -1035,16 +1035,20 @@ tbody tr:last-child td {
 .goal-header {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   color: white;
-  padding: 16px 8px;
+  padding: 12px 4px;
   text-align: center;
   font-weight: 700;
   font-size: 0.9rem;
   border: 1px solid #047857;
-  width: calc((100% - 200px) / 6); /* Equal width for all 6 goal columns */
+  overflow-wrap: anywhere;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
   vertical-align: middle;
   line-height: 1.2;
+}
+
+.evaluation-indicator-header {
+  width: 100px;
 }
 
 .student-row:nth-child(even) {
@@ -1063,13 +1067,13 @@ tbody tr:last-child td {
 
 .student-name-cell {
   background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  padding: 16px;
+  padding: 12px 8px;
   font-weight: 600;
   border: 1px solid #0ea5e9;
   position: sticky;
   left: 0;
   z-index: 5;
-  width: 200px;
+  overflow-wrap: anywhere;
   text-align: center;
   color: #0c4a6e;
   box-shadow: 2px 0 4px rgba(14, 165, 233, 0.1);
@@ -1086,10 +1090,9 @@ tbody tr:last-child td {
 }
 
 .evaluation-cell {
-  padding: 12px 8px;
+  padding: 8px 4px;
   text-align: center;
   border: 1px solid #cbd5e1;
-  width: calc((100% - 200px) / 6); /* Equal width for all goal columns */
   vertical-align: middle;
 }
 
@@ -1106,9 +1109,10 @@ tbody tr:last-child td {
 }
 
 .evaluation-select {
-  width: 90%;
-  max-width: 90px;
-  padding: 8px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 72px;
+  padding: 6px 4px;
   border: 2px solid #e5e7eb;
   border-radius: 6px;
   font-size: 0.9rem;
