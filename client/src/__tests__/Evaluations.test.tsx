@@ -28,7 +28,7 @@ describe('Evaluations', () => {
     render(<Evaluations onError={jest.fn()} />);
     await user.selectOptions(await screen.findByLabelText('Select Class:'), 'Software Engineering-2025-1');
     const headers = screen.getAllByRole('columnheader').map(h => h.textContent);
-    expect(headers).toEqual(['Student', ...GOALS]);
+    expect(headers).toEqual(['Student', ...GOALS, 'AVERAGE']);
     const row = screen.getByRole('row', { name: /Ana Lima/ });
     const selects = within(row).getAllByRole('combobox') as HTMLSelectElement[];
     expect(selects).toHaveLength(6);
