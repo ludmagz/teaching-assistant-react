@@ -186,6 +186,17 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
               </tbody>
             </table>
           </div>
+          <div
+            className="average-legend"
+            role="group"
+            aria-label="Average field color legend"
+            data-testid="average-legend"
+          >
+            <strong>Average field color legend:</strong>
+            <span className="average-approved">Aprovado</span>
+            <span className="average-final">Final</span>
+            <span className="average-failed">Reprovado</span>
+          </div>
         </div>
       )}
     </div>

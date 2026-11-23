@@ -1102,16 +1102,35 @@ tbody tr:last-child td {
   background: #ffffff;
 }
 
-.evaluation-table .average-cell.average-approved {
+.evaluation-table .average-cell.average-approved,
+.average-legend .average-approved {
   background: #4ade80;
 }
 
-.evaluation-table .average-cell.average-final {
+.evaluation-table .average-cell.average-final,
+.average-legend .average-final {
   background: #facc15;
 }
 
-.evaluation-table .average-cell.average-failed {
+.evaluation-table .average-cell.average-failed,
+.average-legend .average-failed {
   background: #f87171;
+}
+
+.average-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: #1f2937;
+  font-size: 0.85rem;
+}
+
+.average-legend span {
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 .evaluation-select {
