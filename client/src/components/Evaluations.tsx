@@ -169,7 +169,7 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                           </td>
                         );
                       })}
-                      <td className="evaluation-cell"></td>
+                      <td className="evaluation-cell">{enrollment.averageBeforeFinalExam ?? '-'}</td>
                     </tr>
                   );
                 })}

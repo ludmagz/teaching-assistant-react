@@ -4,7 +4,7 @@ import { Evaluation } from './Evaluation';
 export interface Enrollment {
   student: Student;
   evaluations: Evaluation[];
-  averageBeforeFinalExam?: number;
+  averageBeforeFinalExam?: number | null;
   averageAfterFinalExam?: number;
   failedByAbsence?: boolean;
 }
