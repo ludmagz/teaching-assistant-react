@@ -38,7 +38,31 @@ export function classRoutes(classes: Classes, onStateChanged: () => void): Route
 
   // GET /api/classes - Get all classes
   router.get('/', (req, res) => {
-    res.json(classes.getAllClasses().map(c => c.toJSON()));
+    const allClasses = classes.getAllClasses();
+
+    res.json(allClasses.map(currentClass => {
+      const classData = currentClass.toJSON();
+      const earlierOfferings = allClasses.filter(offering =>
+        offering.getTopic() === currentClass.getTopic() &&
+        (
+          offering.getYear() < currentClass.getYear() ||
+          (
+            offering.getYear() === currentClass.getYear() &&
+            offering.getSemester() < currentClass.getSemester()
+          )
+        )
+      );
+
+      return {
+        ...classData,
+        enrollments: classData.enrollments.map(enrollment => ({
+          ...enrollment,
+          priorFailureCount: earlierOfferings.filter(offering =>
+            offering.findEnrollmentByStudentCPF(enrollment.student.cpf.replace(/\D/g, ''))
+          ).length,
+        })),
+      };
+    }));
   });
 
   // POST /api/classes - Add a new class

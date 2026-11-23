@@ -7,6 +7,8 @@ export interface Enrollment {
   averageBeforeFinalExam?: number | null;
   averageAfterFinalExam?: number;
   failedByAbsence?: boolean;
+  relativePerformance?: 'BELOW_AVERAGE' | 'AT_AVERAGE' | 'ABOVE_AVERAGE' | null;
+  priorFailureCount?: number | null;
 }
 
 export interface CreateEnrollmentRequest {

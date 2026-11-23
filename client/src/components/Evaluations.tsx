@@ -7,6 +7,12 @@ import { getAverageStatus } from '../utils/getAverageStatus';
 
 import { ImportGradeComponent } from './ImportGrade';
 
+const performanceLabels = {
+  BELOW_AVERAGE: 'Below average',
+  AT_AVERAGE: 'At average',
+  ABOVE_AVERAGE: 'Above average',
+};
+
 interface EvaluationsProps {
   onError: (errorMessage: string) => void;
 }
@@ -137,6 +143,12 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                     <th key={goal} className="goal-header">{goal}</th>
                   ))}
                   <th className="goal-header">AVERAGE</th>
+                  <th scope="col" className="goal-header evaluation-indicator-header">
+                    Performance vs. class
+                  </th>
+                  <th scope="col" className="goal-header evaluation-indicator-header">
+                    Prior failures
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -179,6 +191,14 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                         data-testid="numeric-average"
                       >
                         {enrollment.averageBeforeFinalExam ?? '-'}
+                      </td>
+                      <td className="evaluation-cell">
+                        {enrollment.relativePerformance
+                          ? performanceLabels[enrollment.relativePerformance]
+                          : 'Unavailable'}
+                      </td>
+                      <td className="evaluation-cell">
+                        {enrollment.priorFailureCount ?? 'Unavailable'}
                       </td>
                     </tr>
                   );
