@@ -80,7 +80,7 @@ describe('Data files written by the previous version', () => {
       .toBeCloseTo((3 * 10 + 1 * 7) / 4);
   });
 
-  test('keep the enrollment averages and absence status, under the previous key names', () => {
+  test('accept legacy averages and absence status while querying the current average calculation', () => {
     const { classes } = load({
       students: [{ name: 'Ana Lima', cpf: '12345678901', email: 'ana@cin.ufpe.br' }],
       classes: [{
@@ -99,7 +99,9 @@ describe('Data files written by the previous version', () => {
     });
 
     const enrollment = classes.findClassById('SE-2025-1')!.getEnrollments()[0];
-    expect(enrollment.getAverageBeforeFinalExam()).toBe(7.5);
+    const calculation = jest.spyOn(enrollment, 'calculateAverageBeforeFinalExam').mockReturnValue(6);
+    expect(enrollment.getAverageBeforeFinalExam()).toBe(6);
+    expect(calculation).toHaveBeenCalledTimes(1);
     expect(enrollment.getAverageAfterFinalExam()).toBe(8);
     expect(enrollment.getFailedByAbsence()).toBe(true);
   });
