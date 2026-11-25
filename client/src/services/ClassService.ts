@@ -1,4 +1,5 @@
 import { Class, CreateClassRequest } from '../types/Class';
+import { DefineAverageCalculationSpecificationRequest } from '../types/AverageCalculationSpecification';
 import { ReportData } from '../types/Report';
 import { get, remove, sendJson } from './apiClient';
 
@@ -20,5 +21,13 @@ export const classService = {
     remove(classPath(classId), 'Failed to delete class'),
 
   getClassReport: (classId: string): Promise<ReportData> =>
-    get(`${classPath(classId)}/report`, 'Failed to fetch class report')
+    get(`${classPath(classId)}/report`, 'Failed to fetch class report'),
+
+  /** Defines how the averages of a class are computed; answers the updated class. */
+  defineAverageCalculationSpecification: (
+    classId: string,
+    specification: DefineAverageCalculationSpecificationRequest
+  ): Promise<Class> =>
+    sendJson('PUT', `${classPath(classId)}/average-calculation-specification`, specification,
+      'Failed to define the average calculation')
 };

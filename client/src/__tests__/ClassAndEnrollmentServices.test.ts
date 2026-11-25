@@ -1,5 +1,6 @@
 import { classService } from '../services/ClassService';
 import { enrollmentService } from '../services/EnrollmentService';
+import { EvaluationGrade } from '../types/Evaluation';
 
 /** Records the HTTP contract each service method relies on. */
 describe('ClassService and EnrollmentService', () => {
@@ -78,7 +79,28 @@ describe('ClassService and EnrollmentService', () => {
     await enrollmentService.updateEvaluation('SE-2025-1', '123.456.789-01', 'Design', 'MA');
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3005/api/classes/SE-2025-1/enrollments/123.456.789-01/evaluation',
       { ...json({ goal: 'Design', grade: 'MA' }), method: 'PUT' });
-    respond(400, { error: 'Invalid grade. Must be MANA, MPA, or MA' });
-    await expect(enrollmentService.updateEvaluation('SE-2025-1', '123.456.789-01', 'Design', 'X')).rejects.toThrow('Invalid grade. Must be MANA, MPA, or MA');
+    respond(400, { error: 'Invalid grade. Must be MANA, MPA, MA or a number from 0 to 10' });
+    // an invalid grade on purpose, to check that the message of the server is reported
+    const invalidGrade = 'X' as unknown as EvaluationGrade;
+    await expect(enrollmentService.updateEvaluation('SE-2025-1', '123.456.789-01', 'Design', invalidGrade))
+      .rejects.toThrow('Invalid grade. Must be MANA, MPA, MA or a number from 0 to 10');
+  });
+
+  test('updateEvaluation sends a numeric grade as a JSON number', async () => {
+    respond(200, { evaluations: [{ goal: 'Design', grade: 6.9 }] });
+    await enrollmentService.updateEvaluation('SE-2025-1', '123.456.789-01', 'Design', 6.9);
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3005/api/classes/SE-2025-1/enrollments/123.456.789-01/evaluation',
+      { ...json({ goal: 'Design', grade: 6.9 }), method: 'PUT' });
+  });
+
+  test('defineAverageCalculationSpecification PUTs JSON to /api/classes/:id/average-calculation-specification', async () => {
+    const specification = { model: 'simple' as const, minimumAverageToPass: 7, minimumAverageForFinalExam: 3 };
+    respond(200, { id: 'SE-2025-1' });
+    await expect(classService.defineAverageCalculationSpecification('SE-2025-1', specification)).resolves.toEqual({ id: 'SE-2025-1' });
+    expect(fetchMock).toHaveBeenCalledWith('http://localhost:3005/api/classes/SE-2025-1/average-calculation-specification',
+      { ...json(specification), method: 'PUT' });
+    respond(400, { error: 'The passing average must be between 0 and 10' });
+    await expect(classService.defineAverageCalculationSpecification('SE-2025-1', specification))
+      .rejects.toThrow('The passing average must be between 0 and 10');
   });
 });

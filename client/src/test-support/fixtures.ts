@@ -9,7 +9,7 @@ export const softwareEngineering: Class = {
   topic: 'Software Engineering',
   semester: 1,
   year: 2025,
-  averageCalculationSpecification: { gradeWeights: { MA: 10, MPA: 7, MANA: 0 }, goalWeights: { Design: 1 } },
+  averageCalculationSpecification: { gradeWeights: { MA: 10, MPA: 7, MANA: 0 }, goalWeights: { Design: 1 }, model: 'concepts' },
   enrollments: [{ student: ana, evaluations: [{ goal: 'Design', grade: 'MPA' }] }]
 };
 

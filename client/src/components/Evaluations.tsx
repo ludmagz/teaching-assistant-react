@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Class } from '../types/Class';
-import { EVALUATION_GOALS, GRADES } from '../types/Evaluation';
+import { EVALUATION_GOALS, EvaluationGrade, GRADES } from '../types/Evaluation';
+import { isNumericModel } from '../types/AverageCalculationSpecification';
 import { classService } from '../services/ClassService';
 import { enrollmentService } from '../services/EnrollmentService';
 import { getAverageStatus } from '../utils/getAverageStatus';
 
 import { ImportGradeComponent } from './ImportGrade';
+import AverageCalculationSettings from './AverageCalculationSettings';
+import NumericGradeInput from './NumericGradeInput';
 
 const performanceLabels = {
   BELOW_AVERAGE: 'Below average',
@@ -25,6 +28,8 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
   });
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Outcome of the last grade change, shown next to the table; a new one replaces it
+  const [gradeFeedback, setGradeFeedback] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
   const loadClasses = useCallback(async () => {
     try {
@@ -37,6 +42,16 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
       setIsLoading(false);
     }
   }, [onError]);
+
+  // Reloads the classes keeping the page on screen (no loading state), so that
+  // fields keep their focus and messages stay visible
+  const refreshClasses = async () => {
+    try {
+      setClasses(await classService.getAllClasses());
+    } catch (error) {
+      onError(`Failed to load classes: ${(error as Error).message}`);
+    }
+  };
 
   // Load all classes on component mount
   useEffect(() => {
@@ -55,6 +70,7 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
 
   const handleClassSelection = (classId: string) => {
     setSelectedClassId(classId);
+    setGradeFeedback(null);
     // Save selected class to localStorage for persistence
     if (classId) {
       localStorage.setItem('evaluations-selected-class', classId);
@@ -63,18 +79,26 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
     }
   };
 
-  const handleEvaluationChange = async (studentCPF: string, goal: string, grade: string) => {
+  /** Sends a grade change; resolves to whether the server accepted it. */
+  const handleEvaluationChange = async (studentCPF: string, goal: string, grade: EvaluationGrade | ''): Promise<boolean> => {
     if (!selectedClass) {
       onError('No class selected');
-      return;
+      return false;
     }
 
+    setGradeFeedback(null);
     try {
       await enrollmentService.updateEvaluation(selectedClass.id, studentCPF, goal, grade);
+      const studentName = selectedClass.enrollments.find(e => e.student.cpf === studentCPF)?.student.name;
+      setGradeFeedback({ kind: 'success', text: `The grade of ${studentName} was updated successfully.` });
       // Reload classes to get updated enrollment data
-      await loadClasses();
+      await refreshClasses();
+      return true;
     } catch (error) {
-      onError(`Failed to update evaluation: ${(error as Error).message}`);
+      setGradeFeedback({ kind: 'error', text: `Failed to update evaluation: ${(error as Error).message}` });
+      // Show the stored grades again in place of the rejected one
+      await refreshClasses();
+      return false;
     }
   };
 
@@ -111,6 +135,10 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
         </select>
       </div>
 
+      {selectedClass && (
+        <AverageCalculationSettings classObj={selectedClass} onSaved={refreshClasses} />
+      )}
+
       {!selectedClass && (
         <div className="evaluation-placeholder">
           <h4>No Class Selected</h4>
@@ -133,7 +161,16 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
             <ImportGradeComponent classID={selectedClassId} />
           </div>
           <h4>{selectedClass.topic} ({selectedClass.year}/{selectedClass.semester})</h4>
-          
+          {gradeFeedback && (
+            <div
+              className={gradeFeedback.kind === 'success' ? 'success-message' : 'error-message'}
+              role={gradeFeedback.kind === 'success' ? 'status' : 'alert'}
+              data-testid="grade-feedback"
+            >
+              {gradeFeedback.text}
+            </div>
+          )}
+
           <div className="evaluation-matrix">
             <table className="evaluation-table">
               <thead>
@@ -163,23 +200,42 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                   const studentEvaluations = enrollment.evaluations.reduce((acc, evaluation) => {
                     acc[evaluation.goal] = evaluation.grade;
                     return acc;
-                  }, {} as {[goal: string]: string});
+                  }, {} as {[goal: string]: EvaluationGrade | undefined});
+                  const model = selectedClass.averageCalculationSpecification.model;
 
                   return (
                     <tr key={student.cpf} className="student-row">
                       <td className="student-name-cell">{student.name}</td>
                       {EVALUATION_GOALS.map(goal => {
-                        const currentGrade = studentEvaluations[goal] || '';
-                        
+                        // ?? rather than ||, so that a grade 0 is not taken for no grade
+                        const currentGrade = studentEvaluations[goal] ?? '';
+
+                        if (isNumericModel(model)) {
+                          return (
+                            <td key={goal} className="evaluation-cell">
+                              <NumericGradeInput
+                                grade={typeof currentGrade === 'number' ? currentGrade : undefined}
+                                label={`${student.name} — ${goal}`}
+                                onCommit={(grade) => handleEvaluationChange(student.cpf, goal, grade)}
+                                onInvalid={(text) => setGradeFeedback({ kind: 'error', text })}
+                              />
+                            </td>
+                          );
+                        }
+
+                        // With no model, a grade can only be removed: the only options are '-' and the stored one
+                        const options = model ? GRADES : (currentGrade === '' ? [] : [String(currentGrade)]);
                         return (
                           <td key={goal} className="evaluation-cell">
                             <select
                               value={currentGrade}
-                              onChange={(e) => handleEvaluationChange(student.cpf, goal, e.target.value)}
-                              className={`evaluation-select ${currentGrade ? `grade-${currentGrade.toLowerCase()}` : ''}`}
+                              aria-label={`${student.name} — ${goal}`}
+                              onChange={(e) => handleEvaluationChange(student.cpf, goal, e.target.value as EvaluationGrade | '')}
+                              className={`evaluation-select ${currentGrade !== '' ? `grade-${String(currentGrade).toLowerCase()}` : ''}`}
+                              disabled={!model && currentGrade === ''}
                             >
                               <option value="">-</option>
-                              {GRADES.map(grade => (
+                              {options.map(grade => (
                                 <option key={grade} value={grade}>{grade}</option>
                               ))}
                             </select>
