@@ -22,6 +22,16 @@ Feature: Definição do cálculo de média
     Then o sistema armazena o modelo numérico, a nota de corte "7.0", e os pesos "1", "1", "1", "1", "1" e "5" para a turma "Engenharia de Software e Sistemas"
     And retorna uma mensagem de confirmação da configuração
 
+  Scenario: Configuração bem-sucedida da média mínima para a prova final
+    Given o sistema não possui regras de cálculo definidas para a turma "Engenharia de Software e Sistemas"
+    And eu acesso o sistema na página de configurações da turma
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
+    And confirmo a gravação dos dados
+    Then o sistema armazena o modelo numérico, a nota de corte "7.0" e a média mínima para a prova final "3.0" para a turma "Engenharia de Software e Sistemas"
+    And retorna uma mensagem de confirmação da configuração
+
   Scenario: Configuração bem-sucedida de modelo qualitativo baseado em conceitos
     Given o sistema não possui regras de cálculo definidas para a turma "Eletrônica"
     And eu acesso o sistema na página de configurações da turma
