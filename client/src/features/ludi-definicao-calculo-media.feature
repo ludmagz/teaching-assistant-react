@@ -12,7 +12,7 @@ Feature: Definição do cálculo de média
     Then o sistema armazena o modelo numérico, e a nota de corte "7.0" para a turma "Engenharia de Software e Sistemas"
     And retorna uma mensagem de confirmação da configuração
 
-  Scenario: Configuração bem-sucedida do modelo de notas numéricas ponderadas
+  Scenario: Configuração bem-sucedida do modelo de notas numéricas com pesos
     Given o sistema não possui regras de cálculo definidas para a turma "Engenharia de Software e Sistemas"
     And eu acesso o sistema na página de configurações da turma
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 com pesos"
@@ -24,7 +24,7 @@ Feature: Definição do cálculo de média
 
   Scenario: Configuração bem-sucedida de modelo qualitativo baseado em conceitos
     Given o sistema não possui regras de cálculo definidas para a turma "Eletrônica"
-    And eu acesso o sistema como "professora" na página de configurações da turma
+    And eu acesso o sistema na página de configurações da turma
     When eu seleciono o modelo de avaliação "Conceitos (MA, MPA, MANA)"
     And confirmo a gravação dos dados
     Then o sistema armazena o modelo qualitativo para a turma "Eletrônica"
@@ -32,11 +32,11 @@ Feature: Definição do cálculo de média
     And retorna uma mensagem de confirmação da configuração
 
   Scenario: arredondamento da média para 1 casa decimal sempre para cima
-    Given estou logado na página "Registro de Notas"
+    Given estou na página "Registro de Notas"
     And a opção "média simples" está selecionada
-    And na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "-" e média "6.5"
-    When registro a nota "3" na ultima nota
-    Then na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "2" e média "6.84"
+    And na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "-" e média "-"
+    When registro a nota "2" na ultima nota
+    Then na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "2" e média "6.9"
     And retorna a mensagem de que a nota da aluna "Marina" foi alterada com sucesso
 
   Scenario: Tentativa de configuração com nota de corte inválida
@@ -47,9 +47,9 @@ Feature: Definição do cálculo de média
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que a nota de corte deve estar entre 0 e 10
 
-  Scenario: Tentativa de configuração de pesos no modelo numérico ponderado inválida
+  Scenario: Tentativa de configuração inválida de pesos no modelo numérico com pesos
     Given eu acesso o sistema na página de configurações da turma "Física 3"
-    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 ponderado"
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 com pesos"
     And defino a média de corte para aprovação como "7.0"
     And defino os pesos das avaliações como "1", "3", "3", "4", "1" e "5"
     And confirmo a gravação dos dados
