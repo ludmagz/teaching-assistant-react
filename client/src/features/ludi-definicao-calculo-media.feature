@@ -65,3 +65,12 @@ Feature: Definição do cálculo de média
     And confirmo a gravação dos dados
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que a soma dos pesos deve resultar 10.
+
+  Scenario: Tentativa de configuração com média mínima para a prova final maior que a nota de corte
+    Given eu acesso o sistema na página de configurações da turma "Física 3"
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "8.0"
+    And confirmo a gravação dos dados
+    Then o sistema recusa o armazenamento
+    And exibe uma mensagem de erro informando que a média mínima para a prova final deve estar entre 0 e a nota de corte
