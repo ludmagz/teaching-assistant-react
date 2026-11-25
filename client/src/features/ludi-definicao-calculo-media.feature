@@ -76,6 +76,23 @@ Feature: Definição do cálculo de média
     When registro a nota "MPA" na última nota
     Then na linha da aluna "Marina" vejo as notas "MPA","MPA","MPA", "MPA", "-", "MPA" e média "-"
 
+  Scenario: Tentativa de registro de nota em uma turma sem modelo de avaliação definido
+    Given estou na página "Registro de Notas"
+    And nenhum modelo de avaliação está definido para a turma
+    And na linha da aluna "Marina" vejo as notas "-","-","-", "-", "-", "-" e média "-"
+    When registro a nota "MA" na última nota
+    Then o sistema recusa o registro da nota
+    And exibe uma mensagem de erro informando que o modelo de avaliação da turma deve ser definido antes do registro de notas
+    And na linha da aluna "Marina" vejo as notas "-","-","-", "-", "-", "-" e média "-"
+
+  Scenario: Remoção de nota em uma turma sem modelo de avaliação definido
+    Given estou na página "Registro de Notas"
+    And nenhum modelo de avaliação está definido para a turma
+    And na linha da aluna "Marina" vejo as notas "MA","MPA","MA", "MPA", "MA", "MA" e média "-"
+    When apago a última nota
+    Then na linha da aluna "Marina" vejo as notas "MA","MPA","MA", "MPA", "MA", "-" e média "-"
+    And retorna a mensagem de que a nota da aluna "Marina" foi alterada com sucesso
+
   Scenario: Tentativa de configuração com nota de corte inválida
     Given eu acesso o sistema na página de configurações da turma "Física 3"
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
@@ -123,6 +140,38 @@ Feature: Definição do cálculo de média
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que o modelo não pode ser alterado em uma turma que já possui notas
     And o sistema mantém o modelo "Conceitos (MA, MPA, MANA)" para a turma "Engenharia de Software e Sistemas"
+
+  Scenario: Troca do modelo de avaliação de uma turma que não possui notas
+    Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Conceitos (MA, MPA, MANA)"
+    And a turma "Engenharia de Software e Sistemas" não possui notas registradas
+    And eu acesso o sistema na página de configurações da turma
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
+    And confirmo a gravação dos dados
+    Then o sistema armazena o modelo numérico, a nota de corte "7.0" e a média mínima para a prova final "3.0" para a turma "Engenharia de Software e Sistemas"
+    And retorna uma mensagem de confirmação da configuração
+
+  Scenario: Definição do modelo compatível com as notas já registradas em uma turma sem modelo
+    Given o sistema não possui regras de cálculo definidas para a turma "Engenharia de Software e Sistemas"
+    And a aluna "Marina" possui a nota "MA" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
+    And eu acesso o sistema na página de configurações da turma
+    When eu seleciono o modelo de avaliação "Conceitos (MA, MPA, MANA)"
+    And confirmo a gravação dos dados
+    Then o sistema armazena o modelo qualitativo para a turma "Engenharia de Software e Sistemas"
+    And retorna uma mensagem de confirmação da configuração
+
+  Scenario: Tentativa de definição de modelo incompatível com as notas já registradas em uma turma sem modelo
+    Given o sistema não possui regras de cálculo definidas para a turma "Engenharia de Software e Sistemas"
+    And a aluna "Marina" possui a nota "MA" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
+    And eu acesso o sistema na página de configurações da turma
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
+    And confirmo a gravação dos dados
+    Then o sistema recusa o armazenamento
+    And exibe uma mensagem de erro informando que o modelo não é compatível com as notas já registradas na turma
+    And o sistema não possui regras de cálculo definidas para a turma "Engenharia de Software e Sistemas"
 
   Scenario: Troca do modelo numérico com pesos para sem pesos em uma turma que já possui notas
     Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Numérico de 0 a 10 com pesos", a nota de corte "7.0", a média mínima para a prova final "3.0" e os pesos "1", "1", "1", "1", "1" e "5"
