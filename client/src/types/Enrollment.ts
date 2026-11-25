@@ -4,9 +4,11 @@ import { Evaluation } from './Evaluation';
 export interface Enrollment {
   student: Student;
   evaluations: Evaluation[];
-  averageBeforeFinalExam?: number;
+  averageBeforeFinalExam?: number | null;
   averageAfterFinalExam?: number;
   failedByAbsence?: boolean;
+  relativePerformance?: 'BELOW_AVERAGE' | 'AT_AVERAGE' | 'ABOVE_AVERAGE' | null;
+  priorFailureCount?: number | null;
 }
 
 export interface CreateEnrollmentRequest {

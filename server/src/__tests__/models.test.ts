@@ -145,22 +145,30 @@ describe('Enrollment', () => {
     expect(enrollment.getEvaluations()).toHaveLength(1);
   });
 
-  test('exposes averages and absence status through setters and JSON', () => {
+  test('JSON uses the calculated average and preserves the final average and absence status', () => {
     enrollment.setAverageBeforeFinalExam(7.5);
+    const calculation = jest.spyOn(enrollment, 'calculateAverageBeforeFinalExam').mockReturnValue(6);
     enrollment.setAverageAfterFinalExam(8);
     enrollment.setFailedByAbsence(true);
     expect(enrollment.toJSON()).toEqual({
       student: { name: 'Ana Lima', cpf: '123.456.789-01', email: 'ana@cin.ufpe.br' },
       evaluations: [],
-      averageBeforeFinalExam: 7.5,
+      averageBeforeFinalExam: 6,
       averageAfterFinalExam: 8,
       failedByAbsence: true
     });
+    expect(calculation).toHaveBeenCalledTimes(1);
   });
 
-  test('average calculation is not implemented yet', () => {
-    expect(() => enrollment.calculateAverageBeforeFinalExam()).toThrow('not implemented');
-    expect(() => enrollment.calculateAverageAfterFinalExam()).toThrow('not implemented');
+  test.each([null, 0, 9])('queries the calculation on each read, including result %s', average => {
+    enrollment.setAverageBeforeFinalExam(7.5);
+    const calculation = jest.spyOn(enrollment, 'calculateAverageBeforeFinalExam')
+      .mockReturnValueOnce(average)
+      .mockReturnValueOnce(null);
+
+    expect(enrollment.getAverageBeforeFinalExam()).toBe(average);
+    expect(enrollment.toJSON().averageBeforeFinalExam).toBeNull();
+    expect(calculation).toHaveBeenCalledTimes(2);
   });
 
   test('fromJSON rebuilds evaluations and optional fields', () => {
@@ -168,8 +176,10 @@ describe('Enrollment', () => {
       { student: {}, evaluations: [{ goal: 'Design', grade: 'MA' }], averageBeforeFinalExam: 9, failedByAbsence: true },
       ana()
     );
+    const calculation = jest.spyOn(rebuilt, 'calculateAverageBeforeFinalExam').mockReturnValue(6);
     expect(rebuilt.getEvaluations().map(e => e.toJSON())).toEqual([{ goal: 'Design', grade: 'MA' }]);
-    expect(rebuilt.getAverageBeforeFinalExam()).toBe(9);
+    expect(rebuilt.getAverageBeforeFinalExam()).toBe(6);
+    expect(calculation).toHaveBeenCalledTimes(1);
     expect(rebuilt.getAverageAfterFinalExam()).toBeNull();
     expect(rebuilt.getFailedByAbsence()).toBe(true);
   });

@@ -33,7 +33,7 @@ describe('JsonFileRepository', () => {
     enrollment.addOrUpdateEvaluation('Design', 'MA');
     enrollment.setAverageBeforeFinalExam(8.5);
     enrollment.setFailedByAbsence(true);
-    return { students, classes };
+    return { students, classes, enrollment };
   };
 
   test('load does nothing when the file does not exist', () => {
@@ -45,7 +45,8 @@ describe('JsonFileRepository', () => {
   });
 
   test('save creates the data directory and writes the documented format', () => {
-    const { students, classes } = populatedState();
+    const { students, classes, enrollment } = populatedState();
+    const calculation = jest.spyOn(enrollment, 'calculateAverageBeforeFinalExam').mockReturnValue(6.5);
     repository.save(students, classes);
     expect(JSON.parse(fs.readFileSync(filePath, 'utf-8'))).toEqual({
       students: [
@@ -60,32 +61,36 @@ describe('JsonFileRepository', () => {
         enrollments: [{
           studentCPF: '12345678901',
           evaluations: [{ goal: 'Design', grade: 'MA' }],
-          averageBeforeFinalExam: 8.5,
+          averageBeforeFinalExam: 6.5,
           averageAfterFinalExam: null,
           failedByAbsence: true
         }]
       }]
     });
+    expect(calculation).toHaveBeenCalledTimes(1);
   });
 
   test('load rebuilds what save wrote', () => {
     const saved = populatedState();
+    jest.spyOn(saved.enrollment, 'calculateAverageBeforeFinalExam').mockReturnValue(6.5);
     repository.save(saved.students, saved.classes);
 
     const students = new StudentSet();
     const classes = new Classes();
     repository.load(students, classes);
 
+    const enrollment = classes.findClassById('Software Engineering-2025-1')!.findEnrollmentByStudentCPF('12345678901')!;
+    const calculation = jest.spyOn(enrollment, 'calculateAverageBeforeFinalExam').mockReturnValue(6.5);
     expect(students.getAllStudents().map(s => s.toJSON())).toEqual(saved.students.getAllStudents().map(s => s.toJSON()));
     expect(classes.getAllClasses().map(c => c.toJSON())).toEqual(saved.classes.getAllClasses().map(c => c.toJSON()));
-    const enrollment = classes.findClassById('Software Engineering-2025-1')!.findEnrollmentByStudentCPF('12345678901')!;
     expect(enrollment.getStudent()).toBe(students.findStudentByCPF('12345678901'));
-    expect(enrollment.getAverageBeforeFinalExam()).toBe(8.5);
+    expect(enrollment.getAverageBeforeFinalExam()).toBe(6.5);
+    expect(calculation).toHaveBeenCalledTimes(2);
     expect(enrollment.getAverageAfterFinalExam()).toBeNull();
     expect(enrollment.getFailedByAbsence()).toBe(true);
   });
 
-  test('load reads averages and absence status when the file has them', () => {
+  test('load accepts stored averages but queries the calculation for the current average', () => {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify({
       students: [{ name: 'Ana Lima', cpf: '12345678901', email: 'ana@cin.ufpe.br' }],
@@ -99,7 +104,9 @@ describe('JsonFileRepository', () => {
     const classes = new Classes();
     repository.load(students, classes);
     const enrollment = classes.findClassById('SE-2025-1')!.getEnrollments()[0];
-    expect(enrollment.getAverageBeforeFinalExam()).toBe(7);
+    const calculation = jest.spyOn(enrollment, 'calculateAverageBeforeFinalExam').mockReturnValue(6);
+    expect(enrollment.getAverageBeforeFinalExam()).toBe(6);
+    expect(calculation).toHaveBeenCalledTimes(1);
     expect(enrollment.getAverageAfterFinalExam()).toBe(8);
     expect(enrollment.getFailedByAbsence()).toBe(true);
   });

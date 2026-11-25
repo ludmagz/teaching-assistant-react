@@ -3,8 +3,15 @@ import { Class } from '../types/Class';
 import { EVALUATION_GOALS, GRADES } from '../types/Evaluation';
 import { classService } from '../services/ClassService';
 import { enrollmentService } from '../services/EnrollmentService';
+import { getAverageStatus } from '../utils/getAverageStatus';
 
 import { ImportGradeComponent } from './ImportGrade';
+
+const performanceLabels = {
+  BELOW_AVERAGE: 'Below average',
+  AT_AVERAGE: 'At average',
+  ABOVE_AVERAGE: 'Above average',
+};
 
 interface EvaluationsProps {
   onError: (errorMessage: string) => void;
@@ -135,11 +142,22 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                   {EVALUATION_GOALS.map(goal => (
                     <th key={goal} className="goal-header">{goal}</th>
                   ))}
+                  <th className="goal-header">AVERAGE</th>
+                  <th scope="col" className="goal-header evaluation-indicator-header">
+                    Performance vs. class
+                  </th>
+                  <th scope="col" className="goal-header evaluation-indicator-header">
+                    Prior failures
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {selectedClass.enrollments.map(enrollment => {
                   const student = enrollment.student;
+                  const averageStatus = getAverageStatus(
+                    enrollment.averageBeforeFinalExam,
+                    selectedClass.gradingThresholds
+                  );
                   
                   // Create a map of evaluations for quick lookup
                   const studentEvaluations = enrollment.evaluations.reduce((acc, evaluation) => {
@@ -168,11 +186,36 @@ const Evaluations: React.FC<EvaluationsProps> = ({ onError }) => {
                           </td>
                         );
                       })}
+                      <td
+                        className={`evaluation-cell average-cell${averageStatus ? ` average-${averageStatus}` : ''}`}
+                        data-testid="numeric-average"
+                      >
+                        {enrollment.averageBeforeFinalExam ?? '-'}
+                      </td>
+                      <td className="evaluation-cell">
+                        {enrollment.relativePerformance
+                          ? performanceLabels[enrollment.relativePerformance]
+                          : 'Unavailable'}
+                      </td>
+                      <td className="evaluation-cell">
+                        {enrollment.priorFailureCount ?? 'Unavailable'}
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+          <div
+            className="average-legend"
+            role="group"
+            aria-label="Average field color legend"
+            data-testid="average-legend"
+          >
+            <strong>Average field color legend:</strong>
+            <span className="average-approved">Aprovado</span>
+            <span className="average-final">Final</span>
+            <span className="average-failed">Reprovado</span>
           </div>
         </div>
       )}

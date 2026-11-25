@@ -1012,39 +1012,43 @@ tbody tr:last-child td {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  min-width: 800px;
+  min-width: 980px;
   table-layout: fixed; /* Fixed layout for uniform column widths */
 }
 
-.student-name-header {
+.evaluation-table .student-name-header {
   background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: white;
-  padding: 16px;
+  padding: 10px 4px;
   text-align: center;
   font-weight: 700;
   border: 1px solid #4338ca;
   position: sticky;
   left: 0;
   z-index: 10;
-  width: 200px; /* Fixed width for student column */
-  font-size: 1rem;
+  width: 160px;
+  font-size: 0.85rem;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
-.goal-header {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  color: white;
-  padding: 16px 8px;
+.evaluation-table .goal-header {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0c4a6e;
+  padding: 10px 3px;
   text-align: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  border: 1px solid #047857;
-  width: calc((100% - 200px) / 6); /* Equal width for all 6 goal columns */
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  border: 1px solid #e2e8f0;
+  border-bottom: 2px solid #e2e8f0;
+  width: calc((100% - 160px) / 9); /* Equal width for goals, average and indicators */
   vertical-align: middle;
   line-height: 1.2;
+}
+
+.evaluation-table .goal-header:nth-child(odd) {
+  background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
 }
 
 .student-row:nth-child(even) {
@@ -1063,13 +1067,14 @@ tbody tr:last-child td {
 
 .student-name-cell {
   background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  padding: 16px;
+  padding: 8px 4px;
+  font-size: 0.85rem;
   font-weight: 600;
   border: 1px solid #0ea5e9;
   position: sticky;
   left: 0;
   z-index: 5;
-  width: 200px;
+  overflow-wrap: anywhere;
   text-align: center;
   color: #0c4a6e;
   box-shadow: 2px 0 4px rgba(14, 165, 233, 0.1);
@@ -1086,32 +1091,58 @@ tbody tr:last-child td {
 }
 
 .evaluation-cell {
-  padding: 12px 8px;
+  padding: 6px 3px;
+  font-size: 0.8rem;
   text-align: center;
   border: 1px solid #cbd5e1;
-  width: calc((100% - 200px) / 6); /* Equal width for all goal columns */
   vertical-align: middle;
 }
 
-.student-row:nth-child(even) .evaluation-cell {
-  background-color: #f0f9ff;
-}
-
-.student-row:nth-child(odd) .evaluation-cell {
-  background-color: #ffffff;
-}
-
+.student-row:nth-child(even) .evaluation-cell,
+.student-row:nth-child(odd) .evaluation-cell,
 .student-row:hover .evaluation-cell {
-  background-color: #e0f2fe;
+  background: #ffffff;
+}
+
+.evaluation-table .average-cell.average-approved,
+.average-legend .average-approved {
+  background: #4ade80;
+}
+
+.evaluation-table .average-cell.average-final,
+.average-legend .average-final {
+  background: #facc15;
+}
+
+.evaluation-table .average-cell.average-failed,
+.average-legend .average-failed {
+  background: #f87171;
+}
+
+.average-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: #1f2937;
+  font-size: 0.85rem;
+}
+
+.average-legend span {
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 .evaluation-select {
-  width: 90%;
-  max-width: 90px;
-  padding: 8px 12px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 68px;
+  padding: 4px 3px;
   border: 2px solid #e5e7eb;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   background-color: white;
   cursor: pointer;

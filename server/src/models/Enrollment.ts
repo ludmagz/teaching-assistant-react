@@ -33,9 +33,10 @@ export class Enrollment {
     return [...this.evaluations]; // Return copy to prevent external modification
   }
 
-  // Computes the student's average before the final exam
-  calculateAverageBeforeFinalExam(): number {
-    throw new Error('calculateAverage() not implemented yet');
+  // Returns null while grades are incomplete; otherwise, an integer from 0 to 10.
+  calculateAverageBeforeFinalExam(): number | null {
+    // Temporary return until the average calculation is implemented.
+    return null;
   }
 
   // Computes the student's average after the final exam
@@ -45,7 +46,7 @@ export class Enrollment {
 
   // Get the student's average before the final exam
   getAverageBeforeFinalExam(): number | null {
-    return this.averageBeforeFinalExam;
+    return this.calculateAverageBeforeFinalExam();
   }
 
   // Set the student's average before the final exam
@@ -103,7 +104,7 @@ export class Enrollment {
     return {
       student: this.student.toJSON(),
       evaluations: this.evaluations.map(evaluation => evaluation.toJSON()),
-      averageBeforeFinalExam: this.averageBeforeFinalExam,
+      averageBeforeFinalExam: this.getAverageBeforeFinalExam(),
       averageAfterFinalExam: this.averageAfterFinalExam,
       failedByAbsence: this.failedByAbsence
     };
