@@ -27,6 +27,16 @@ const createClass = (data = softwareEngineering) => request(app).post('/api/clas
 const enroll = (classId: string, studentCPF: string) =>
   request(app).post(`${classPath(classId)}/enroll`).send({ studentCPF }).expect(201);
 
+const specificationPath = (classId: string) => `${classPath(classId)}/average-calculation-specification`;
+const simpleModel = { model: 'simple', minimumAverageToPass: 7, minimumAverageForFinalExam: 3 };
+const weightedModel = {
+  model: 'weighted', minimumAverageToPass: 7, minimumAverageForFinalExam: 3,
+  goalWeights: { Requirements: 1, 'Configuration Management': 1, 'Project Management': 1, Design: 1, Tests: 1, Refactoring: 5 }
+};
+const conceptsModel = { model: 'concepts' };
+const defineModel = (body: object, classId = softwareEngineeringId) =>
+  request(app).put(specificationPath(classId)).send(body);
+
 describe('Class endpoints', () => {
   beforeEach(clearState);
 
@@ -253,6 +263,8 @@ describe('Evaluation endpoints', () => {
     await createStudent();
     await createClass();
     await enroll(softwareEngineeringId, student.cpf);
+    // grades can only be recorded once the class has a model
+    await defineModel(conceptsModel).expect(200);
   });
 
   test('GET .../evaluation returns the student and both averages (null before any calculation)', async () => {
@@ -289,6 +301,7 @@ describe('Evaluation endpoints', () => {
   });
 
   test('PUT .../evaluation accepts numeric grades, including 0 and decimals', async () => {
+    await defineModel(simpleModel).expect(200);
     const added = await request(app).put(evaluationPath).send({ goal: 'Design', grade: 6.9 }).expect(200);
     expect(added.body.evaluations).toEqual([{ goal: 'Design', grade: 6.9 }]);
     // 0 is a grade, not an empty value: it must not remove the evaluation
@@ -315,6 +328,117 @@ describe('Evaluation endpoints', () => {
     await request(app).put(`${classPath('Nope-2025-1')}/enrollments/${student.cpf}/evaluation`).send({ goal: 'Design', grade: 'MA' }).expect(404);
     const notEnrolled = await request(app).put(`${classPath(softwareEngineeringId)}/enrollments/${otherStudent.cpf}/evaluation`).send({ goal: 'Design', grade: 'MA' }).expect(404);
     expect(notEnrolled.body.error).toBe('Student not enrolled in this class');
+  });
+
+  test('PUT .../evaluation rejects a grade of another kind than the model of the class', async () => {
+    const numberInConcepts = await request(app).put(evaluationPath).send({ goal: 'Design', grade: 8 }).expect(400);
+    expect(numberInConcepts.body.error).toBe('The grade does not match the average calculation model of the class');
+    await defineModel(simpleModel).expect(200);
+    const conceptInNumeric = await request(app).put(evaluationPath).send({ goal: 'Design', grade: 'MA' }).expect(400);
+    expect(conceptInNumeric.body.error).toBe('The grade does not match the average calculation model of the class');
+    const list = await request(app).get(`${classPath(softwareEngineeringId)}/enrollments`).expect(200);
+    expect(list.body[0].evaluations).toEqual([]);
+  });
+});
+
+describe('Evaluation endpoints in a class with no model', () => {
+  const evaluationPath = `${classPath(softwareEngineeringId)}/enrollments/${student.cpf}/evaluation`;
+
+  beforeEach(async () => {
+    clearState();
+    await createStudent();
+    await createClass();
+    await enroll(softwareEngineeringId, student.cpf);
+  });
+
+  test('PUT .../evaluation rejects recording a grade', async () => {
+    for (const grade of ['MA', 8]) {
+      const response = await request(app).put(evaluationPath).send({ goal: 'Design', grade }).expect(400);
+      expect(response.body.error).toBe('The average calculation model of the class must be defined before grades are recorded');
+    }
+    const list = await request(app).get(`${classPath(softwareEngineeringId)}/enrollments`).expect(200);
+    expect(list.body[0].evaluations).toEqual([]);
+  });
+
+  test('PUT .../evaluation still accepts removing a grade', async () => {
+    const response = await request(app).put(evaluationPath).send({ goal: 'Design', grade: '' }).expect(200);
+    expect(response.body.evaluations).toEqual([]);
+  });
+});
+
+describe('Average calculation specification endpoint', () => {
+  const evaluationPath = `${classPath(softwareEngineeringId)}/enrollments/${student.cpf}/evaluation`;
+  const recordGrade = (grade: string | number) =>
+    request(app).put(evaluationPath).send({ goal: 'Requirements', grade }).expect(200);
+  const storedClass = async () => (await request(app).get('/api/classes').expect(200)).body[0];
+
+  beforeEach(async () => {
+    clearState();
+    await createStudent();
+    await createClass();
+    await enroll(softwareEngineeringId, student.cpf);
+  });
+
+  test('defines the simple model with both averages', async () => {
+    const response = await defineModel(simpleModel).expect(200);
+    expect(response.body.averageCalculationSpecification).toMatchObject(simpleModel);
+    expect(response.body.gradingThresholds).toEqual({ minimumAverageToPass: 7, minimumAverageForFinalExam: 3 });
+    expect((await storedClass()).averageCalculationSpecification.model).toBe('simple');
+  });
+
+  test('defines the weighted model with its weights', async () => {
+    const response = await defineModel(weightedModel).expect(200);
+    expect(response.body.averageCalculationSpecification).toMatchObject(weightedModel);
+  });
+
+  test('defines the concepts model, with no averages', async () => {
+    const response = await defineModel(conceptsModel).expect(200);
+    expect(response.body.averageCalculationSpecification.model).toBe('concepts');
+    expect(response.body.averageCalculationSpecification.minimumAverageToPass).toBeNull();
+    expect(response.body.gradingThresholds).toBeNull();
+  });
+
+  test('answers 404 for an unknown class', async () => {
+    await defineModel(simpleModel, 'Nope-2025-1').expect(404);
+  });
+
+  test.each([
+    [{ model: 'other' }, 'Model must be simple, weighted or concepts'],
+    [{ ...simpleModel, minimumAverageToPass: '7.0' }, 'Averages must be numbers'],
+    [{ ...weightedModel, goalWeights: [1, 1, 1, 1, 1, 5] }, 'Goal weights must be an object of numbers'],
+    [{ ...simpleModel, minimumAverageToPass: 11.5 }, 'The passing average must be between 0 and 10'],
+    [{ model: 'simple', minimumAverageToPass: 7 }, 'The minimum average for the final exam is required'],
+    [{ ...simpleModel, minimumAverageForFinalExam: 8 }, 'The minimum average for the final exam must be between 0 and the passing average'],
+    [{ ...weightedModel, goalWeights: { ...weightedModel.goalWeights, 'Configuration Management': 3, 'Project Management': 3, Design: 4 } },
+      'The sum of the goal weights must be 10']
+  ])('rejects %j and keeps the class with no rules', async (body, error) => {
+    const response = await defineModel(body).expect(400);
+    expect(response.body.error).toBe(error);
+    expect((await storedClass()).averageCalculationSpecification.model).toBeUndefined();
+  });
+
+  test('rejects switching between concepts and a numeric model once the class has grades, keeping the model', async () => {
+    await defineModel(conceptsModel).expect(200);
+    await recordGrade('MA');
+    const response = await defineModel(simpleModel).expect(400);
+    expect(response.body.error).toBe('The model cannot be changed in a class that already has grades');
+    expect((await storedClass()).averageCalculationSpecification.model).toBe('concepts');
+  });
+
+  test('switches between the numeric models and changes the averages of a class with grades', async () => {
+    await defineModel(weightedModel).expect(200);
+    await recordGrade(8);
+    await defineModel(simpleModel).expect(200);
+    const response = await defineModel({ ...simpleModel, minimumAverageToPass: 6 }).expect(200);
+    expect(response.body.gradingThresholds).toEqual({ minimumAverageToPass: 6, minimumAverageForFinalExam: 3 });
+  });
+
+  test('switches to any model once the grades of the class are removed', async () => {
+    await defineModel(conceptsModel).expect(200);
+    await recordGrade('MA');
+    await recordGrade('');
+    const response = await defineModel(simpleModel).expect(200);
+    expect(response.body.averageCalculationSpecification.model).toBe('simple');
   });
 });
 

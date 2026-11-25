@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { Classes } from '../models/Classes';
 import { Class } from '../models/Class';
-import { DEFAULT_AVERAGE_CALCULATION_SPECIFICATION } from '../models/AverageCalculationSpecification';
+import {
+  AverageCalculationModel,
+  AverageCalculationSpecification,
+  DEFAULT_AVERAGE_CALCULATION_SPECIFICATION,
+  isAverageCalculationModel
+} from '../models/AverageCalculationSpecification';
 import { badRequest, notFound } from './HttpError';
 import { isInteger, isNonEmptyString } from './validation';
 
@@ -70,5 +75,45 @@ export function classRoutes(classes: Classes, onStateChanged: () => void): Route
     res.status(204).send();
   });
 
+  // PUT /api/classes/:id/average-calculation-specification - Define how the averages of a class are computed
+  router.put('/:id/average-calculation-specification', (req, res) => {
+    const { model, ...options } = requireSpecificationFields(req.body);
+    const classObj = classes.findClassById(req.params.id);
+    if (!classObj) {
+      throw notFound('Class not found');
+    }
+    classObj.setAverageCalculationSpecification(AverageCalculationSpecification.forModel(model, options));
+    onStateChanged();
+    res.json(classObj.toJSON());
+  });
+
   return router;
+}
+
+interface SpecificationFields {
+  model: AverageCalculationModel;
+  minimumAverageToPass?: number | null;
+  minimumAverageForFinalExam?: number | null;
+  goalWeights?: Record<string, number>;
+}
+
+/**
+ * Checks the types of a request body that defines an average calculation
+ * specification; the rules on the values are checked by the domain model.
+ */
+function requireSpecificationFields(body: any): SpecificationFields {
+  const { model, minimumAverageToPass, minimumAverageForFinalExam, goalWeights } = body;
+  if (!isAverageCalculationModel(model)) {
+    throw badRequest('Model must be simple, weighted or concepts');
+  }
+  const isOptionalNumber = (value: unknown) => value === undefined || value === null || typeof value === 'number';
+  if (!isOptionalNumber(minimumAverageToPass) || !isOptionalNumber(minimumAverageForFinalExam)) {
+    throw badRequest('Averages must be numbers');
+  }
+  const isWeightsObject = (value: unknown) => typeof value === 'object' && value !== null && !Array.isArray(value)
+    && Object.values(value).every(weight => typeof weight === 'number');
+  if (goalWeights !== undefined && !isWeightsObject(goalWeights)) {
+    throw badRequest('Goal weights must be an object of numbers');
+  }
+  return { model, minimumAverageToPass, minimumAverageForFinalExam, goalWeights };
 }

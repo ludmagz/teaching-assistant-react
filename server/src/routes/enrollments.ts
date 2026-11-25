@@ -95,6 +95,8 @@ export function enrollmentRoutes(classes: Classes, students: StudentSet, onState
       if (!isEvaluationGrade(grade)) {
         throw badRequest('Invalid grade. Must be MANA, MPA, MA or a number from 0 to 10');
       }
+      // removing a grade is always allowed; recording one depends on the model of the class
+      findClass(req.params.classId).checkGradeCanBeRecorded(grade);
       enrollment.addOrUpdateEvaluation(goal, grade);
     }
     onStateChanged();
