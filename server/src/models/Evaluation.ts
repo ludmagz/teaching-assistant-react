@@ -8,12 +8,32 @@ export function isGrade(value: unknown): value is Grade {
   return (GRADES as readonly unknown[]).includes(value);
 }
 
+/** Bounds of a numeric grade, used by the numeric average models. */
+export const MIN_NUMERIC_GRADE = 0;
+export const MAX_NUMERIC_GRADE = 10;
+
+/** Type guard: tells whether an arbitrary value is a number from 0 to 10. */
+export function isNumericGrade(value: unknown): value is number {
+  return typeof value === 'number'
+    && Number.isFinite(value)
+    && value >= MIN_NUMERIC_GRADE
+    && value <= MAX_NUMERIC_GRADE;
+}
+
+/** What an evaluation can hold: a concept (MA, MPA, MANA) or a numeric grade. */
+export type EvaluationGrade = Grade | number;
+
+/** Type guard: tells whether an arbitrary value is a concept or a numeric grade. */
+export function isEvaluationGrade(value: unknown): value is EvaluationGrade {
+  return isGrade(value) || isNumericGrade(value);
+}
+
 /** The grade a student got for one learning goal of a class. */
 export class Evaluation {
   private goal: string;
-  private grade: Grade;
+  private grade: EvaluationGrade;
 
-  constructor(goal: string, grade: Grade) {
+  constructor(goal: string, grade: EvaluationGrade) {
     this.goal = goal;
     this.grade = grade;
   }
@@ -22,11 +42,11 @@ export class Evaluation {
     return this.goal;
   }
 
-  public getGrade(): Grade {
+  public getGrade(): EvaluationGrade {
     return this.grade;
   }
 
-  public setGrade(grade: Grade): void {
+  public setGrade(grade: EvaluationGrade): void {
     this.grade = grade;
   }
 
@@ -38,7 +58,7 @@ export class Evaluation {
   }
 
   // Create Evaluation from JSON object
-  public static fromJSON(data: { goal: string; grade: Grade }): Evaluation {
+  public static fromJSON(data: { goal: string; grade: EvaluationGrade }): Evaluation {
     return new Evaluation(data.goal, data.grade);
   }
 }

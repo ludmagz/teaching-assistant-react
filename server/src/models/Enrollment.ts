@@ -1,5 +1,5 @@
 import { Student } from './Student';
-import { Evaluation, Grade } from './Evaluation';
+import { Evaluation, EvaluationGrade } from './Evaluation';
 
 /**
  * A student's participation in a class: the grades of the learning goals,
@@ -74,7 +74,7 @@ export class Enrollment {
   }
 
   // Add or update an evaluation
-  addOrUpdateEvaluation(goal: string, grade: Grade): void {
+  addOrUpdateEvaluation(goal: string, grade: EvaluationGrade): void {
     const existingIndex = this.evaluations.findIndex(evaluation => evaluation.getGoal() === goal);
     if (existingIndex >= 0) {
       this.evaluations[existingIndex].setGrade(grade);

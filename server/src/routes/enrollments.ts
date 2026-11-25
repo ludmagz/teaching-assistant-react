@@ -4,7 +4,7 @@ import { Class } from '../models/Class';
 import { Enrollment } from '../models/Enrollment';
 import { StudentSet } from '../models/StudentSet';
 import { cleanCPF } from '../models/CPF';
-import { isGrade } from '../models/Evaluation';
+import { isEvaluationGrade } from '../models/Evaluation';
 import { badRequest, notFound } from './HttpError';
 import { isNonEmptyString } from './validation';
 
@@ -92,8 +92,8 @@ export function enrollmentRoutes(classes: Classes, students: StudentSet, onState
     if (grade === '' || grade === null || grade === undefined) {
       enrollment.removeEvaluation(goal);
     } else {
-      if (!isGrade(grade)) {
-        throw badRequest('Invalid grade. Must be MANA, MPA, or MA');
+      if (!isEvaluationGrade(grade)) {
+        throw badRequest('Invalid grade. Must be MANA, MPA, MA or a number from 0 to 10');
       }
       enrollment.addOrUpdateEvaluation(goal, grade);
     }

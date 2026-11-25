@@ -1,6 +1,6 @@
 import { Student } from '../models/Student';
 import { StudentSet } from '../models/StudentSet';
-import { Evaluation, EVALUATION_GOALS } from '../models/Evaluation';
+import { Evaluation, EVALUATION_GOALS, isEvaluationGrade, isNumericGrade } from '../models/Evaluation';
 import { Enrollment } from '../models/Enrollment';
 import { Class } from '../models/Class';
 import { Classes } from '../models/Classes';
@@ -78,6 +78,32 @@ describe('Evaluation', () => {
     evaluation.setGrade('MA');
     expect(evaluation.toJSON()).toEqual({ goal: 'Design', grade: 'MA' });
     expect(Evaluation.fromJSON({ goal: 'Tests', grade: 'MANA' }).toJSON()).toEqual({ goal: 'Tests', grade: 'MANA' });
+  });
+
+  test('stores a numeric grade and round-trips it through JSON', () => {
+    const evaluation = new Evaluation('Design', 6.9);
+    expect(evaluation.getGrade()).toBe(6.9);
+    evaluation.setGrade(0);
+    expect(evaluation.toJSON()).toEqual({ goal: 'Design', grade: 0 });
+    expect(Evaluation.fromJSON({ goal: 'Tests', grade: 10 }).toJSON()).toEqual({ goal: 'Tests', grade: 10 });
+  });
+
+  test.each([0, 6.9, 10])('accepts %s as a numeric grade', grade => {
+    expect(isNumericGrade(grade)).toBe(true);
+    expect(isEvaluationGrade(grade)).toBe(true);
+  });
+
+  test.each([-0.1, 10.5, '8', NaN, Infinity, null, undefined])('rejects %s as a numeric grade', grade => {
+    expect(isNumericGrade(grade)).toBe(false);
+    expect(isEvaluationGrade(grade)).toBe(false);
+  });
+
+  test('accepts the concepts as evaluation grades, but not as numeric grades', () => {
+    for (const concept of ['MA', 'MPA', 'MANA']) {
+      expect(isEvaluationGrade(concept)).toBe(true);
+      expect(isNumericGrade(concept)).toBe(false);
+    }
+    expect(isEvaluationGrade('A')).toBe(false);
   });
 
   test('predefines the six evaluation goals', () => {

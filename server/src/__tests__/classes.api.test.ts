@@ -287,13 +287,30 @@ describe('Evaluation endpoints', () => {
     }
   });
 
+  test('PUT .../evaluation accepts numeric grades, including 0 and decimals', async () => {
+    const added = await request(app).put(evaluationPath).send({ goal: 'Design', grade: 6.9 }).expect(200);
+    expect(added.body.evaluations).toEqual([{ goal: 'Design', grade: 6.9 }]);
+    // 0 is a grade, not an empty value: it must not remove the evaluation
+    const zero = await request(app).put(evaluationPath).send({ goal: 'Design', grade: 0 }).expect(200);
+    expect(zero.body.evaluations).toEqual([{ goal: 'Design', grade: 0 }]);
+  });
+
+  test('PUT .../evaluation rejects numeric grades outside 0-10 and numbers sent as text', async () => {
+    for (const grade of [-1, 10.5, '8']) {
+      const response = await request(app).put(evaluationPath).send({ goal: 'Design', grade }).expect(400);
+      expect(response.body.error).toBe('Invalid grade. Must be MANA, MPA, MA or a number from 0 to 10');
+    }
+    const list = await request(app).get(`${classPath(softwareEngineeringId)}/enrollments`).expect(200);
+    expect(list.body[0].evaluations).toEqual([]);
+  });
+
   test('PUT .../evaluation validates goal, grade, class and enrollment', async () => {
     const noGoal = await request(app).put(evaluationPath).send({ grade: 'MA' }).expect(400);
     expect(noGoal.body.error).toBe('Goal is required');
     const badGoal = await request(app).put(evaluationPath).send({ goal: ['Design'], grade: 'MA' }).expect(400);
     expect(badGoal.body.error).toBe('Goal must be a non-empty string');
     const badGrade = await request(app).put(evaluationPath).send({ goal: 'Design', grade: 'A' }).expect(400);
-    expect(badGrade.body.error).toBe('Invalid grade. Must be MANA, MPA, or MA');
+    expect(badGrade.body.error).toBe('Invalid grade. Must be MANA, MPA, MA or a number from 0 to 10');
     await request(app).put(`${classPath('Nope-2025-1')}/enrollments/${student.cpf}/evaluation`).send({ goal: 'Design', grade: 'MA' }).expect(404);
     const notEnrolled = await request(app).put(`${classPath(softwareEngineeringId)}/enrollments/${otherStudent.cpf}/evaluation`).send({ goal: 'Design', grade: 'MA' }).expect(404);
     expect(notEnrolled.body.error).toBe('Student not enrolled in this class');
