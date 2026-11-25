@@ -11,6 +11,12 @@ module.exports = {
     paths: ['src/features/fernando-calculo-media.feature', 'src/features/fernando-color-coding.feature'],
     format: ['progress', 'json:reports/fernando.json', 'html:reports/fernando.html']
   },
+  ludi: {
+    require: ['acceptance/ludi.steps.ts'],
+    requireModule: ['ts-node/register'],
+    paths: ['src/features/ludi-definicao-calculo-media.feature'],
+    format: ['progress', 'json:reports/ludi.json', 'html:reports/ludi.html']
+  },
   default: {
     require: [
       'ts-node/register',

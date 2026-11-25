@@ -29,7 +29,8 @@
     "test:cucumber": "npx cucumber-js --config cucumber.js",
     "test:cucumber:watch": "npx cucumber-js --config cucumber.js --watch",
     "eject": "react-scripts eject",
-    "test:bdd:fernando": "cucumber-js --config cucumber.js --profile fernando"
+    "test:bdd:fernando": "cucumber-js --config cucumber.js --profile fernando",
+    "test:bdd:ludi": "cucumber-js --config cucumber.js --profile ludi"
   },
   "eslintConfig": {
     "extends": [
