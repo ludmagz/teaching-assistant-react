@@ -8,8 +8,9 @@ Feature: Definição do cálculo de média
     And eu acesso o sistema na página de configurações da turma
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
     And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
     And confirmo a gravação dos dados
-    Then o sistema armazena o modelo numérico, e a nota de corte "7.0" para a turma "Engenharia de Software e Sistemas"
+    Then o sistema armazena o modelo numérico, a nota de corte "7.0" e a média mínima para a prova final "3.0" para a turma "Engenharia de Software e Sistemas"
     And retorna uma mensagem de confirmação da configuração
 
   Scenario: Configuração bem-sucedida do modelo de notas numéricas com pesos
@@ -17,19 +18,10 @@ Feature: Definição do cálculo de média
     And eu acesso o sistema na página de configurações da turma
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 com pesos"
     And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
     And defino os pesos das avaliações como "1", "1", "1", "1", "1" e "5"
     And confirmo a gravação dos dados
-    Then o sistema armazena o modelo numérico, a nota de corte "7.0", e os pesos "1", "1", "1", "1", "1" e "5" para a turma "Engenharia de Software e Sistemas"
-    And retorna uma mensagem de confirmação da configuração
-
-  Scenario: Configuração bem-sucedida da média mínima para a prova final
-    Given o sistema não possui regras de cálculo definidas para a turma "Engenharia de Software e Sistemas"
-    And eu acesso o sistema na página de configurações da turma
-    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
-    And defino a média de corte para aprovação como "7.0"
-    And defino a média mínima para a prova final como "3.0"
-    And confirmo a gravação dos dados
-    Then o sistema armazena o modelo numérico, a nota de corte "7.0" e a média mínima para a prova final "3.0" para a turma "Engenharia de Software e Sistemas"
+    Then o sistema armazena o modelo numérico, a nota de corte "7.0", a média mínima para a prova final "3.0" e os pesos "1", "1", "1", "1", "1" e "5" para a turma "Engenharia de Software e Sistemas"
     And retorna uma mensagem de confirmação da configuração
 
   Scenario: Configuração bem-sucedida de modelo qualitativo baseado em conceitos
@@ -88,6 +80,7 @@ Feature: Definição do cálculo de média
     Given eu acesso o sistema na página de configurações da turma "Física 3"
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
     And defino a média de corte para aprovação como "11.5"
+    And defino a média mínima para a prova final como "3.0"
     And confirmo a gravação dos dados
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que a nota de corte deve estar entre 0 e 10
@@ -96,6 +89,7 @@ Feature: Definição do cálculo de média
     Given eu acesso o sistema na página de configurações da turma "Física 3"
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 com pesos"
     And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
     And defino os pesos das avaliações como "1", "3", "3", "4", "1" e "5"
     And confirmo a gravação dos dados
     Then o sistema recusa o armazenamento
@@ -110,22 +104,40 @@ Feature: Definição do cálculo de média
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que a média mínima para a prova final deve estar entre 0 e a nota de corte
 
+  Scenario: Tentativa de configuração do modelo numérico sem a média mínima para a prova final
+    Given eu acesso o sistema na página de configurações da turma "Física 3"
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And defino a média de corte para aprovação como "7.0"
+    And confirmo a gravação dos dados
+    Then o sistema recusa o armazenamento
+    And exibe uma mensagem de erro informando que a média mínima para a prova final é obrigatória
+
   Scenario: Tentativa de troca do modelo de avaliação de uma turma que já possui notas
     Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Conceitos (MA, MPA, MANA)"
     And a aluna "Marina" possui a nota "MA" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
     And eu acesso o sistema na página de configurações da turma
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
     And defino a média de corte para aprovação como "7.0"
+    And defino a média mínima para a prova final como "3.0"
     And confirmo a gravação dos dados
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que o modelo não pode ser alterado em uma turma que já possui notas
     And o sistema mantém o modelo "Conceitos (MA, MPA, MANA)" para a turma "Engenharia de Software e Sistemas"
 
   Scenario: Troca do modelo numérico com pesos para sem pesos em uma turma que já possui notas
-    Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Numérico de 0 a 10 com pesos", a nota de corte "7.0" e os pesos "1", "1", "1", "1", "1" e "5"
+    Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Numérico de 0 a 10 com pesos", a nota de corte "7.0", a média mínima para a prova final "3.0" e os pesos "1", "1", "1", "1", "1" e "5"
     And a aluna "Marina" possui a nota "8" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
     And eu acesso o sistema na página de configurações da turma
     When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
     And confirmo a gravação dos dados
-    Then o sistema armazena o modelo numérico, e a nota de corte "7.0" para a turma "Engenharia de Software e Sistemas"
+    Then o sistema armazena o modelo numérico, a nota de corte "7.0" e a média mínima para a prova final "3.0" para a turma "Engenharia de Software e Sistemas"
+    And retorna uma mensagem de confirmação da configuração
+
+  Scenario: Alteração da nota de corte em uma turma que já possui notas
+    Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Numérico de 0 a 10 sem pesos", a nota de corte "7.0" e a média mínima para a prova final "3.0"
+    And a aluna "Marina" possui a nota "8" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
+    And eu acesso o sistema na página de configurações da turma
+    When defino a média de corte para aprovação como "6.0"
+    And confirmo a gravação dos dados
+    Then o sistema armazena o modelo numérico, a nota de corte "6.0" e a média mínima para a prova final "3.0" para a turma "Engenharia de Software e Sistemas"
     And retorna uma mensagem de confirmação da configuração
