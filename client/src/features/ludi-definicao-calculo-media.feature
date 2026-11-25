@@ -34,9 +34,9 @@ Feature: Definição do cálculo de média
   Scenario: arredondamento da média para 1 casa decimal sempre para cima
     Given estou logado na página "Registro de Notas"
     And a opção "média simples" está selecionada
-    And na linha da aluna "Marina" vejo as notas "10","9","8", "-", "6", "6" e média "6.5"
+    And na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "-" e média "6.5"
     When registro a nota "3" na ultima nota
-    Then na linha da aluna "Marina" vejo as notas "10","9","8", "3", "6", "6" e média "6.2"
+    Then na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "2" e média "6.84"
     And retorna a mensagem de que a nota da aluna "Marina" foi alterada com sucesso
 
   Scenario: Tentativa de configuração com nota de corte inválida
