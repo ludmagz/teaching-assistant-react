@@ -109,3 +109,23 @@ Feature: Definição do cálculo de média
     And confirmo a gravação dos dados
     Then o sistema recusa o armazenamento
     And exibe uma mensagem de erro informando que a média mínima para a prova final deve estar entre 0 e a nota de corte
+
+  Scenario: Tentativa de troca do modelo de avaliação de uma turma que já possui notas
+    Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Conceitos (MA, MPA, MANA)"
+    And a aluna "Marina" possui a nota "MA" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
+    And eu acesso o sistema na página de configurações da turma
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And defino a média de corte para aprovação como "7.0"
+    And confirmo a gravação dos dados
+    Then o sistema recusa o armazenamento
+    And exibe uma mensagem de erro informando que o modelo não pode ser alterado em uma turma que já possui notas
+    And o sistema mantém o modelo "Conceitos (MA, MPA, MANA)" para a turma "Engenharia de Software e Sistemas"
+
+  Scenario: Troca do modelo numérico com pesos para sem pesos em uma turma que já possui notas
+    Given a turma "Engenharia de Software e Sistemas" está configurada com o modelo de avaliação "Numérico de 0 a 10 com pesos", a nota de corte "7.0" e os pesos "1", "1", "1", "1", "1" e "5"
+    And a aluna "Marina" possui a nota "8" na meta "Requirements" da turma "Engenharia de Software e Sistemas"
+    And eu acesso o sistema na página de configurações da turma
+    When eu seleciono o modelo de avaliação "Numérico de 0 a 10 sem pesos"
+    And confirmo a gravação dos dados
+    Then o sistema armazena o modelo numérico, e a nota de corte "7.0" para a turma "Engenharia de Software e Sistemas"
+    And retorna uma mensagem de confirmação da configuração
