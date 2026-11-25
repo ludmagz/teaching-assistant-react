@@ -45,7 +45,7 @@ Feature: Definição do cálculo de média
     Given estou na página "Registro de Notas"
     And a opção "média simples" está selecionada
     And na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "-" e média "-"
-    When registro a nota "2" na ultima nota
+    When registro a nota "2" na última nota
     Then na linha da aluna "Marina" vejo as notas "10","9","8", "6", "6", "2" e média "6.9"
     And retorna a mensagem de que a nota da aluna "Marina" foi alterada com sucesso
 
@@ -53,35 +53,35 @@ Feature: Definição do cálculo de média
     Given estou na página "Registro de Notas"
     And a opção "Conceitos (MA, MPA, MANA)" está selecionada
     And na linha da aluna "Marina" vejo as notas "MA","MANA","MA", "MPA", "MA", "-" e média "-"
-    When registro a nota "MA" na ultima nota
+    When registro a nota "MA" na última nota
     Then na linha da aluna "Marina" vejo as notas "MA","MANA","MA", "MPA", "MA", "MA" e média "6.5"
 
   Scenario: Média por conceitos sem MANA e com menos de 20% de MA
     Given estou na página "Registro de Notas"
     And a opção "Conceitos (MA, MPA, MANA)" está selecionada
     And na linha da aluna "Marina" vejo as notas "MPA","MPA","MPA", "MPA", "MPA", "-" e média "-"
-    When registro a nota "MA" na ultima nota
+    When registro a nota "MA" na última nota
     Then na linha da aluna "Marina" vejo as notas "MPA","MPA","MPA", "MPA", "MPA", "MA" e média "7.0"
 
   Scenario: Média por conceitos sem MANA e com 20% ou mais de MA
     Given estou na página "Registro de Notas"
     And a opção "Conceitos (MA, MPA, MANA)" está selecionada
     And na linha da aluna "Marina" vejo as notas "MA","MA","MA", "MA", "MPA", "-" e média "-"
-    When registro a nota "MPA" na ultima nota
+    When registro a nota "MPA" na última nota
     Then na linha da aluna "Marina" vejo as notas "MA","MA","MA", "MA", "MPA", "MPA" e média "9.0"
 
   Scenario: Média por conceitos com menos de 60% de MA ou MPA
     Given estou na página "Registro de Notas"
     And a opção "Conceitos (MA, MPA, MANA)" está selecionada
     And na linha da aluna "Marina" vejo as notas "MANA","MANA","MANA", "MANA", "MA", "-" e média "-"
-    When registro a nota "MA" na ultima nota
+    When registro a nota "MA" na última nota
     Then na linha da aluna "Marina" vejo as notas "MANA","MANA","MANA", "MANA", "MA", "MA" e média "3.4"
 
   Scenario: Média por conceitos não é calculada enquanto falta alguma nota
     Given estou na página "Registro de Notas"
     And a opção "Conceitos (MA, MPA, MANA)" está selecionada
     And na linha da aluna "Marina" vejo as notas "MPA","MPA","MPA", "MPA", "-", "-" e média "-"
-    When registro a nota "MPA" na ultima nota
+    When registro a nota "MPA" na última nota
     Then na linha da aluna "Marina" vejo as notas "MPA","MPA","MPA", "MPA", "-", "MPA" e média "-"
 
   Scenario: Tentativa de configuração com nota de corte inválida
