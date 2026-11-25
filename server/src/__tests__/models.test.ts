@@ -220,6 +220,7 @@ describe('Class', () => {
       semester: 1,
       year: 2025,
       averageCalculationSpecification: DEFAULT_AVERAGE_CALCULATION_SPECIFICATION.toJSON(),
+      gradingThresholds: null,
       enrollments: [new Enrollment(ana()).toJSON()]
     });
   });

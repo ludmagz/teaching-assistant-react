@@ -48,6 +48,7 @@ describe('Class endpoints', () => {
           Requirements: 1, 'Configuration Management': 1, 'Project Management': 1, Design: 1, Tests: 1, Refactoring: 1
         }
       },
+      gradingThresholds: null,
       enrollments: []
     });
     const list = await request(app).get('/api/classes').expect(200);

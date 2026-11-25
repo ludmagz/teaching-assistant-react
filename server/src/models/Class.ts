@@ -1,6 +1,7 @@
 import { Student } from './Student';
 import { Enrollment } from './Enrollment';
-import { AverageCalculationSpecification } from './AverageCalculationSpecification';
+import { AverageCalculationSpecification, AverageCalculationModel, isNumericModel } from './AverageCalculationSpecification';
+import { EvaluationGrade, isGrade } from './Evaluation';
 import { DomainError } from './DomainError';
 
 /**
@@ -12,7 +13,7 @@ export class Class {
   private topic: string;
   private semester: number;
   private year: number;
-  private readonly averageCalculationSpecification: AverageCalculationSpecification;
+  private averageCalculationSpecification: AverageCalculationSpecification;
   private enrollments: Enrollment[];
 
   constructor(topic: string, semester: number, year: number, averageCalculationSpecification: AverageCalculationSpecification, enrollments: Enrollment[] = []) {
@@ -62,6 +63,50 @@ export class Class {
     return this.averageCalculationSpecification;
   }
 
+  /**
+   * Replaces the specification of how averages are computed. Once the class
+   * has grades, the model can only change between the numeric ones (with
+   * and without weights), and a class that had no model can only get one
+   * that matches the grades already recorded; the averages can always change.
+   */
+  setAverageCalculationSpecification(specification: AverageCalculationSpecification): void {
+    const currentModel = this.averageCalculationSpecification.getModel();
+    const newModel = specification.getModel();
+
+    if (this.hasGrades() && currentModel !== newModel) {
+      if (currentModel === null) {
+        if (!this.gradesMatchModel(newModel))
+          throw new DomainError('The model is not compatible with the grades already recorded in the class');
+      } else if (!(isNumericModel(currentModel) && isNumericModel(newModel))) {
+        throw new DomainError('The model cannot be changed in a class that already has grades');
+      }
+    }
+
+    this.averageCalculationSpecification = specification;
+  }
+
+  /**
+   * Checks that a grade can be recorded in the class: the class must have a
+   * model, and the grade must be of the kind the model takes.
+   */
+  checkGradeCanBeRecorded(grade: EvaluationGrade): void {
+    const model = this.averageCalculationSpecification.getModel();
+    if (model === null)
+      throw new DomainError('The average calculation model of the class must be defined before grades are recorded');
+    if (!gradeMatchesModel(grade, model))
+      throw new DomainError('The grade does not match the average calculation model of the class');
+  }
+
+  /** Whether any enrolled student has a grade for some goal. */
+  hasGrades(): boolean {
+    return this.enrollments.some(enrollment => enrollment.getEvaluations().length > 0);
+  }
+
+  private gradesMatchModel(model: AverageCalculationModel | null): boolean {
+    return model !== null && this.enrollments.every(enrollment =>
+      enrollment.getEvaluations().every(evaluation => gradeMatchesModel(evaluation.getGrade(), model)));
+  }
+
   // Enrollment management
   addEnrollment(student: Student): Enrollment {
     // Check if student is already enrolled
@@ -107,6 +152,7 @@ export class Class {
       semester: this.semester,
       year: this.year,
       averageCalculationSpecification: this.averageCalculationSpecification.toJSON(),
+      gradingThresholds: this.averageCalculationSpecification.getGradingThresholds(),
       enrollments: this.enrollments.map(enrollment => enrollment.toJSON())
     };
   }
@@ -128,4 +174,9 @@ export class Class {
 
     return new Class(data.topic, data.semester, data.year, averageCalculationSpecification, enrollments);
   }
+}
+
+/** Concepts in the concepts model, numbers in the numeric ones. */
+function gradeMatchesModel(grade: EvaluationGrade, model: AverageCalculationModel): boolean {
+  return isNumericModel(model) ? typeof grade === 'number' : isGrade(grade);
 }
